@@ -114,5 +114,5 @@ if __name__ == '__main__':
         print("get_addresses.py : a command-line tool which creates lat/lng from addresses in a CSV file.")
         print("Assumes first line of CSV contains headers, and contains address and city in 2 different columns.")
         print("USAGE: get_addresses.py [CSV filename to read] [CSV filename to write to]")
-    # _create_addresses_dict(sys.argv[1])
+        sys.exit(1)
     _create_addresses_list("jerusalem_businesses.csv")
