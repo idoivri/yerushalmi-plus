@@ -44,15 +44,19 @@ def _geocode(address):
 
     if res.status_code == 200:
         data = json.loads(res.text)
-        print (data['results'][0]['geometry']['location'])
-        return data['results'][0]['geometry']['location']
+        try:
+            print (data['results'][0]['geometry']['location'])
+            return data['results'][0]['geometry']['location']
+        except IndexError:
+            print ("ERROR: Requests returned no lat/lng for {}".format(address))
+            return {'lat': None, 'lng': None}
 
     else:
         print ("ERROR: Requests returned status code {}".format(res.status_code))
         return {'lat': None, 'lng': None}
 
-def _write_csv(businesses_list):
-    with open("business_with_addresses.csv", 'w') as f:
+def _write_csv(businesses_list,target_file_name):
+    with open(target_file_name, 'w') as f:
 
         try:
             writer = csv.writer(f)
@@ -66,7 +70,7 @@ def _write_csv(businesses_list):
     return True
 
 
-def _create_addresses_list(file_name):
+def _create_addresses_list(file_name,target_file_name):
     # read csv with file_name, create a list with addresses only, while appending city_name to it
     # print ("Reading from {}".format(file_name))
     # with open(file_name, newline='') as csvfile:
@@ -90,13 +94,15 @@ def _create_addresses_list(file_name):
 
         for row in address_reader:
             data_row = list()
-            row_address = "{} {}".format(row[address_index], row[city_index])
+            row_address = "{} {} {}".format(row[address_index], row[city_index], "ישראל")
             data_row.append(row_address)
             address_dict = _geocode(row_address)
 
             for i, data in enumerate(row):
                 if i == address_index or i == city_index:
                     continue
+                elif address_dict['lat'] == None or address_dict['lng'] == None:
+                    print ("ERROR: no lng / lat for {} {}".format(row[4],row_address))
                 elif title_row[i] == 'lat':
                     data_row.append(address_dict['lat'])
                 elif title_row[i] == 'lng':
@@ -106,7 +112,7 @@ def _create_addresses_list(file_name):
 
             csv_to_write.append(data_row)
 
-        _write_csv(csv_to_write)
+        _write_csv(csv_to_write,target_file_name)
 
 if __name__ == '__main__':
 
@@ -115,4 +121,4 @@ if __name__ == '__main__':
         print("Assumes first line of CSV contains headers, and contains address and city in 2 different columns.")
         print("USAGE: get_addresses.py [CSV filename to read] [CSV filename to write to]")
         sys.exit(1)
-    _create_addresses_list("jerusalem_businesses.csv")
+    _create_addresses_list(sys.argv[1],sys.argv[2])
